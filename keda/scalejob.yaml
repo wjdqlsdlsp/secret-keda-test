@@ -1,0 +1,58 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: example
+  namespace: es
+spec:
+  refreshInterval: 1h           # rate SecretManager pulls GCPSM
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: example               # name of the SecretStore (or kind specified)
+  target:
+    name: pubsub-secret  # name of the k8s Secret to be created
+    creationPolicy: Owner
+  data:
+  - secretKey: test  # name of the GCPSM secret key
+    remoteRef:
+      key: test
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: gcp-pubsub-credentials
+  namespace: es
+spec:
+  secretTargetRef:
+    - parameter: GoogleApplicationCredentials
+      name: pubsub-secret
+      key: test
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledJob
+metadata:
+  name: scaled-job
+  namespace: es
+spec:
+  jobTargetRef:
+    parallelism: 5
+    completions: 1
+    backoffLimit: 3
+    template:
+      spec:
+        serviceAccountName: sa
+        nodeSelector:
+          iam.gke.io/gke-metadata-server-enabled: "true"
+        containers:
+          - name: subscribe-job
+            image: gcr.io/sharp-voyage-345407/subscribe:0.1
+            command: ["python3", "main.py"]
+  pollingInterval: 30
+  minReplicaCount: 0
+  maxReplicaCount: 5
+  triggers:
+    - type: gcp-pubsub
+      authenticationRef:
+        name: gcp-pubsub-credentials
+      metadata:
+        subscriptionSize: "1"
+        subscriptionName: test-sub

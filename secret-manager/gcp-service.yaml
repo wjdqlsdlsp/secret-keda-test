@@ -14,4 +14,3 @@ spec:
   - secretKey: test  # name of the GCPSM secret key
     remoteRef:
       key: test
----
