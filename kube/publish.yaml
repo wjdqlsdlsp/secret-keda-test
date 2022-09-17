@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: publish
+spec:
+  template:
+    spec:
+      serviceAccountName: sa
+      nodeSelector:
+        iam.gke.io/gke-metadata-server-enabled: "true"
+      containers:
+      - name: publish
+        image: gcr.io/sharp-voyage-345407/publish:0.3
+        command: ["python3", "main.py"]
+      restartPolicy: Never
+  backoffLimit: 2
