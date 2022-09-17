@@ -2,3 +2,11 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: es
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: admin-user@sharp-voyage-345407.iam.gserviceaccount.com
+  name: sa
+  namespace: es

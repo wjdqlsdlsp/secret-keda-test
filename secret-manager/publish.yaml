@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: publish
+spec:
+  template:
+    spec:
+      containers:
+      - name: publish
+        image: gcr.io/sharp-voyage-345407/publish:0.3
+        command: ['python', 'main.py']
+        volumeMounts:
+          - name: foo
+            mountPath: "/credential"
+            readOnly: true
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: "/credential/test"
+      volumes:
+        - name: foo
+          secret:
+            secretName: secret-to-be-created
+      restartPolicy: Never
+  backoffLimit: 1
